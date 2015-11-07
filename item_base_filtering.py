@@ -34,14 +34,14 @@ def calculateSimilarItems(prefs,n=10):
         c+=1
         if c%100==0: print ("%d / %d" % (c,len(itemPrefs)))
         # Find the most similar items to this one
-        scores=topMatches(itemPrefs,item,n=n,similarity=similarity.similarity_cosine)
+        scores=topMatches(itemPrefs, item, n=n, similarity=similarity.cosine_sim)
         result[item]=scores
     return result
 
 
 #Returns the best matches for person from the prefs dictionary.
 # Number of results and similarity function are optional params.
-def topMatches(prefs,person,n=5,similarity=similarity.similarity_cosine):
+def topMatches(prefs, person, n=5, similarity=similarity.cosine_sim):
     scores=[(similarity(prefs,person,other,2),other)
         for other in prefs if other!=person]
 # Sort the list so the highest scores appear at the top
