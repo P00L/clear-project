@@ -1,5 +1,8 @@
 import csv
 import datetime
+
+from Tools.scripts.mailerdaemon import sort_numeric
+
 from similarity import item_sim
 
 
@@ -34,6 +37,7 @@ def cbf_recommendations(user_ratings, icm_m, sim_skr=20, shrink=10):
     """
     totals = {}  # dizionario {item: sum (rating * similarity)}
     sim_sums = {}  # dizionario {item: sum (similarity)}
+    avg_rec = [(5.0, 33173), (5.0, 33475), (5.0, 1076), (5.0, 35300), (5.0, 15743)]
 
     for other_movie in icm_m:  # scandisco tutti i movie non recensiti dall'user e li confronto con quelli recensiti
         if other_movie not in user_ratings:
@@ -46,9 +50,14 @@ def cbf_recommendations(user_ratings, icm_m, sim_skr=20, shrink=10):
                     totals[other_movie] += user_ratings[movie]*similarity
                     sim_sums.setdefault(other_movie, 0)
                     sim_sums[other_movie] += similarity
-    # shrink a caso ma sembra non cambiare molto tra uno o l'altro
+    # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     rankings = [(total/(sim_sums[item] + shrink), item) for item, total in totals.items()]
     sort_rankings = sorted(rankings, key=lambda x: -x[0])[0:5]
+    # This should happen when there are less than five similar movie for the movies
+    if len(sort_rankings) < 5:
+        for elem in avg_rec:
+            sort_rankings.apppend(elem)
+    sort_rankings = sort_rankings[0:5]
     string_s = ""
     for rate in range(0, len(sort_rankings)):
         string_s = string_s + " " + str(sort_rankings[rate][1])
