@@ -53,7 +53,7 @@ def cbf_recommendations(user_ratings, icm_m, sim_skr=20, shrink=10):
     # This should happen when there are less than five similar movie for the movies
     if len(sort_rankings) < 5:
         for elem in avg_rec:
-            sort_rankings.apppend(elem)
+            sort_rankings.append(elem)
     sort_rankings = sort_rankings[0:5]
     string_s = ""
     for rate in range(0, len(sort_rankings)):
