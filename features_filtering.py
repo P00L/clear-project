@@ -87,10 +87,10 @@ with open('resources/test.csv', 'rt') as f:
     user_test_list = list(reader)
 
 """
-============================= NOTE =================================
+=============================== NOTE ==================================
 if possible, to traceback the submission, rename the file in this way
- **********  cbf_srk[sim_skr]sim_skr[sim_srk]rank.csv   *****************
-====================================================================
+ **********  cbf_srk[sim_skr]sim_skr[sim_srk]rank.csv   ***************
+=======================================================================
 """
 time = datetime.datetime.now()
 with open('submission/cbf_srk25sim_skr15rank.csv', 'w', newline='') as f:
