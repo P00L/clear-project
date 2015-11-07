@@ -3,7 +3,7 @@ import datetime
 from similarity import item_sim
 
 
-def cbf_recommendations(user_ratings, icm_m, sim_srk=20, shrink=10):
+def cbf_recommendations(user_ratings, icm_m, sim_skr=20, shrink=10):
     """
     * WARNING:
         # This function is very resources and time consuming if it is done in large batch (e.g in a for loop over
@@ -24,7 +24,7 @@ def cbf_recommendations(user_ratings, icm_m, sim_srk=20, shrink=10):
     ----------
     user_ratings: ratings of the user, it contains all the rated movie by an user
     icm_m: item content matrix
-    sim_srk: shrink term f the similarity
+    sim_skr: shrink term f the similarity
     shrink: shrink of the function itself
 
     Returns
@@ -40,7 +40,7 @@ def cbf_recommendations(user_ratings, icm_m, sim_srk=20, shrink=10):
             for movie in user_ratings:
                 if movie != other_movie:
                     # per ogni movie non recensito dall'user calcolo la similarity con quelli recensiti
-                    similarity = item_sim(icm_m, movie, other_movie, skr=sim_srk)
+                    similarity = item_sim(icm_m, movie, other_movie, skr=sim_skr)
                 if similarity != 0:
                     totals.setdefault(other_movie, 0)
                     totals[other_movie] += user_ratings[movie]*similarity
@@ -80,18 +80,18 @@ with open('resources/test.csv', 'rt') as f:
 """
 ============================= NOTE =================================
 if possible, to traceback the submission, rename the file in this way
- **********  cbf_srk_[shrink]_sim_[sim_srk].csv   *****************
+ **********  cbf_srk[sim_skr]sim_skr[sim_srk]rank.csv   *****************
 ====================================================================
 """
 time = datetime.datetime.now()
-with open('submission/cbf_srk_15_sim_25.csv', 'w', newline='') as f:
+with open('submission/cbf_srk25sim_skr15rank.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
     for i in range(1, len(user_test_list)):
         my_dict['userId'] = user_test_list[i][0]
-        my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])], icm, shrink=15, sim_srk=25)
+        my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])], icm, shrink=15, sim_skr=25)
         w.writerow(my_dict)
         print(str(my_dict['userId']) + "," + str(my_dict['testItems']))
 print(datetime.datetime.now() - time)
