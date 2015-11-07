@@ -1,8 +1,5 @@
 import csv
 import datetime
-
-from Tools.scripts.mailerdaemon import sort_numeric
-
 from similarity import item_sim
 
 
