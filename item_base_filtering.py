@@ -102,15 +102,25 @@ with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     list = list(reader)
 
-with open('submission/item_base.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+with open('resources/item_similarity.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
     # item_dict e' un dizionario fatto come {'item':{'item':similarity}}
     item_dict = calculateSimilarItems(urm)
-    fieldnames = ['userId', 'testItems']
-    w = csv.DictWriter(f,fieldnames=fieldnames)
+    fieldnames = ['item1','item2','sim']
+    w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
-    for i in range(1, len(list)):
-        my_dict['userId'] = list[i][0]
-        my_dict['testItems'] = getRecommendedItems(urm, item_dict,int(list[i][0]), 6)
-        w.writerow(my_dict)
-        print(my_dict)
+    for item1 in item_dict:
+        for  item2 in item_dict[item1]:
+            my_dict['item1']= item1
+            my_dict['item2'] = item2[1]
+            my_dict['sim'] = item2[0]
+            w.writerow(my_dict)
+            print(my_dict)
+    #fieldnames = ['userId', 'testItems']
+    #w = csv.DictWriter(f,fieldnames=fieldnames)
+    #w.writeheader()
+    #for i in range(1, len(list)):
+    #    my_dict['userId'] = list[i][0]
+    #    my_dict['testItems'] = getRecommendedItems(urm, item_dict,int(list[i][0]), 6)
+    #    w.writerow(my_dict)
+    #    print(my_dict)
