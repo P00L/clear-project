@@ -1,5 +1,4 @@
 __author__ = 'Federica'
-
 import csv
 import similarity
 
@@ -9,46 +8,26 @@ with open('resources/train.csv', 'rt') as f:
     urm = {}
     for row in reader:
         if row[0]!= 'userId':
-                urm.setdefault(int(row[0]),{})[int(row[1])]=float(row[2])
+                urm.setdefault(row[0], {})[row[1]]=float(row[2])
 
-#switcha gli item con le persone che li hanno votati {'item':{'user':ranking}}
-def transformPrefs(prefs):
-    result={}
-    for person in prefs:
-        for item in prefs[person]:
-            result.setdefault(item, {})
-            # Flip item and person
-            result[item][person]=prefs[person][item]
-    return result
+with open('resources/test.csv', 'rt') as f:
+    reader = csv.reader(f)
+    test_dict = {}
+    for row in reader:
+        if row[0] != "userId":
+            test_dict.setdefault(row[0])
 
-# questa calcola tutti gli item simili tra di loro
-def calculateSimilarItems(prefs,n=10):
-    # Create a dictionary of items showing which other items they
-    # are most similar to.
-    result={}
-    # Invert the preference matrix to be item-centric
-    itemPrefs = transformPrefs(prefs)
-    c=0
-    for item in itemPrefs:
-        # Status updates for large datasets
-        c+=1
-        if c%100==0: print ("%d / %d" % (c,len(itemPrefs)))
-        # Find the most similar items to this one
-        scores=topMatches(itemPrefs, item, n=n, similarity=similarity.cosine_sim)
-        result[item]=scores
-    return result
+with open('resources/test.csv', 'rt') as f:
+    reader = csv.reader(f)
+    list = list(reader)
 
-
-#Returns the best matches for person from the prefs dictionary.
-# Number of results and similarity function are optional params.
-def topMatches(prefs, person, n=5, similarity=similarity.cosine_sim):
-    scores=[(similarity(prefs,person,other,2),other)
-        for other in prefs if other!=person]
-# Sort the list so the highest scores appear at the top
-    scores.sort()
-    scores.reverse()
-    return scores[0:n]
-
+# item_dict deve essere fatto cosi': {'item': [('sim','item')]} un dizionario di lista di tuple
+with open('resources/item_similarity.csv', 'rt') as f:
+    reader = csv.reader(f)
+    item_dict = {}
+    for row in reader:
+        if row[0]!='item1':
+            item_dict.setdefault(row[0],[]).append((float(row[2]), row[1]))
 
 def getRecommendedItems(prefs,itemMatch,user,sink):
     userRatings=prefs[user]
@@ -91,36 +70,15 @@ def getRecommendedItems(prefs,itemMatch,user,sink):
 
     return result
 
-with open('resources/test.csv', 'rt') as f:
-    reader = csv.reader(f)
-    test_dict = {}
-    for row in reader:
-        if row[0] != "userId":
-            test_dict.setdefault(int(row[0]))
 
-with open('resources/test.csv', 'rt') as f:
-    reader = csv.reader(f)
-    list = list(reader)
-
-with open('resources/item_similarity.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+with open('submission/item_base_filtering_skr6.csv', 'w', newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
-    # item_dict e' un dizionario fatto come {'item':{'item':similarity}}
-    item_dict = calculateSimilarItems(urm)
-    fieldnames = ['item1','item2','sim']
-    w = csv.DictWriter(f, fieldnames=fieldnames)
+    #item_dict e' un dizionario fatto come {'item':{'item':similarity}}
+    fieldnames = ['userId', 'testItems']
+    w = csv.DictWriter(f,fieldnames=fieldnames)
     w.writeheader()
-    for item1 in item_dict:
-        for  item2 in item_dict[item1]:
-            my_dict['item1']= item1
-            my_dict['item2'] = item2[1]
-            my_dict['sim'] = item2[0]
-            w.writerow(my_dict)
-            print(my_dict)
-    #fieldnames = ['userId', 'testItems']
-    #w = csv.DictWriter(f,fieldnames=fieldnames)
-    #w.writeheader()
-    #for i in range(1, len(list)):
-    #    my_dict['userId'] = list[i][0]
-    #    my_dict['testItems'] = getRecommendedItems(urm, item_dict,int(list[i][0]), 6)
-    #    w.writerow(my_dict)
-    #    print(my_dict)
+    print(list)
+    for i in range(1, len(list)):
+        my_dict['userId'] = list[i][0]
+        my_dict['testItems'] = getRecommendedItems(urm, item_dict, list[i][0], 6)
+        w.writerow(my_dict)
