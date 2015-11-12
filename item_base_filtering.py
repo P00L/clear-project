@@ -52,7 +52,7 @@ def getRecommendedItems(prefs,itemMatch,user,sink):
             totalSim[item2]+=similarity
 
     # Divide each total score by total weighting to get an average
-    rankings=[((score/totalSim[item]+sink),item) for item,score in scores.items()]
+    rankings=[((float(score)/float(totalSim[item]+sink)),item) for item,score in scores.items()]
 
     # Return the rankings from highest to lowest
     rankings.sort()
@@ -77,8 +77,8 @@ with open('submission/item_base_filtering_skr6.csv', 'w', newline='') as f:  # J
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f,fieldnames=fieldnames)
     w.writeheader()
-    print(list)
     for i in range(1, len(list)):
         my_dict['userId'] = list[i][0]
         my_dict['testItems'] = getRecommendedItems(urm, item_dict, list[i][0], 6)
         w.writerow(my_dict)
+        print(my_dict)
