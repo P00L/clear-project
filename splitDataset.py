@@ -82,7 +82,7 @@ for user in urm_test.keys():
     for i in range(0, len(item_to_delete)):
         del urm_test[user][item_to_delete[i]]
 
-
+'''
 # FINALLY: dobbiamo togliere 80% dei dei rating dal train set
 tot_ratings = 0
 for user in urm_train.keys():
@@ -103,7 +103,7 @@ for user in random.sample(urm_train.keys(), num_user):
 tot_ratings = 0
 for user in urm_train.keys():
     tot_ratings += len(urm_train[user])
-
+'''
 # Creiamo i csv tran e test
 
 with open('test/train_split.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x

@@ -1,7 +1,7 @@
 import numpy as np
 import csv
 
-def apk(actual, predicted, k=5):
+def apk(actual, predicted, k):
     """
     Computes the average precision at k.
     This function computes the average prescision at k between two lists of
@@ -35,7 +35,7 @@ def apk(actual, predicted, k=5):
 
     return score / min(len(actual), k)
 
-def mapk(actual, predicted, k=5):
+def mapk(actual, predicted, k):
     """
     Computes the mean average precision at k.
     This function computes the mean average prescision at k between two lists
@@ -58,7 +58,7 @@ def mapk(actual, predicted, k=5):
     return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
 
 #{user:[item]}
-with open('submission/consegna_cb_pearson.csv', 'r') as urm:
+with open('test/item_base_filtering_skr6_test_map.csv', 'r') as urm:
     reader = csv.reader(urm)
     predicted_dic = {}
     for row in reader:
@@ -86,4 +86,4 @@ for user in predicted_dic:
 print("reccomandation "+str(predicted))
 print("real data "+str(actual))
 
-print (mapk(actual,predicted))
+print (mapk(actual,predicted,2))
