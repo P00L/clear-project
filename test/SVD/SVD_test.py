@@ -6,9 +6,9 @@
 # the original matrix (in this case, the utility
 # matrix M)
 # self.U[uid], self.V[mid]
-#numero user for us = 15374
+#numero user for us = 15373
 #numero item for us = 37142
-#ricorda gli elementi nella matrice U e V sono scalati di -1 rispetto ai nostri valori
+#ricorda gli elementi nella matrice U e V sono scalati di -1
 # =======================================
 import math
 import csv
@@ -42,7 +42,7 @@ class SvdMatrix:
     typefile -> 0 if for smaller MovieLens dataset
                 1 if for medium or larger MovieLens dataset
     """
-    def __init__(self, nusers, nmovies, r=55, lrate=0.005, regularizer=0.02):
+    def __init__(self, nusers, nmovies, r=50, lrate=0.01, regularizer=0.02):
         self.trainrats = []#la nostra urm sotto forma di lista di oggetti Rating
         self.testrats = []
                 
@@ -65,7 +65,7 @@ class SvdMatrix:
         self.lrate = lrate
         self.regularizer = regularizer
         self.minimprov = 0.0005
-        self.maxepochs = 33
+        self.maxepochs = 30
 
 
     """
@@ -77,7 +77,6 @@ class SvdMatrix:
     """
     Returns the estimated rating corresponding to userid for movieid
     Ensures returns rating is in range [1,10]
-    p = predicted rating(dot prduct) + avg + user bias + item bias
     """
     def calcrating(self, uid, mid):
         p = self.dotproduct(self.U[uid], self.V[mid]) + self.avg + user_bias[uid] + item_bias[mid]
@@ -117,15 +116,10 @@ class SvdMatrix:
         for i in range(len(self.trainrats)):
             # get current rating
             crating = self.trainrats[i]
-            #vedi predict per la predizione
             err = crating.rat - self.predict(crating.uid, crating.mid)
-            #spero sia giusto vedi SVD libro di recco consiglaito da cremo(se non cel'hai te lo passo)
-            #non sono sicuro sulle norme dei bias in teoria la norma e la somma degli elementi al quadrato sotto radice, ma siccome da noi
-            #vuola la norma al quadrato ho lasciato solo la somma degli elementi (forse manca al quadrato)
             sse += err**2 + self.regularizer * (user_bias[crating.uid]**2 + item_bias[crating.mid]**2 + sum(self.U[crating.uid]) +sum(self.V[crating.mid]))
             n += 1
 
-            #store temporary old value
             uTemp = self.U[crating.uid][k]
             vTemp = self.V[crating.mid][k]
             user_bias_temp = user_bias[crating.uid]
@@ -135,30 +129,6 @@ class SvdMatrix:
             self.V[crating.mid][k] += self.lrate * (err*uTemp - self.regularizer*vTemp)
             user_bias[crating.uid] += self.lrate * (err - self.regularizer * user_bias_temp)
             item_bias[crating.mid] += self.lrate * (err - self.regularizer * item_bias_temp)
-
-            #idea per fare il train di alcuni zero random(assunzione se manca e zero)
-            """
-            n_zero_trained = 0
-            for x in range(0,1000):
-                random_user = random.randint(0,15373)
-                random_item = random.randint(0,37142)
-                if random_item not in urm[random_user]:
-                    n_zero_trained += 1
-                    err = -self.predict(random_user, random_item)
-                    sse += err**2 + self.regularizer * (user_bias[crating.uid]**2 + item_bias[crating.mid]**2 + sum(self.U[crating.uid]) +sum(self.V[crating.mid]))
-                    n += 1
-                   #store temporary old value
-                    uTemp = self.U[crating.uid][k]
-                    vTemp = self.V[crating.mid][k]
-                    user_bias_temp = user_bias[crating.uid]
-                    item_bias_temp = item_bias[crating.mid]
-
-                    self.U[crating.uid][k] += self.lrate * (err*vTemp - self.regularizer*uTemp)
-                    self.V[crating.mid][k] += self.lrate * (err*uTemp - self.regularizer*vTemp)
-                    user_bias[crating.uid] += self.lrate * (err - self.regularizer * user_bias_temp)
-                    item_bias[crating.mid] += self.lrate * (err - self.regularizer * item_bias_temp)
-            print("random zero trained = " + str(n_zero_trained))
-            """
         return math.sqrt(sse/n)
 
     """
@@ -182,6 +152,7 @@ class SvdMatrix:
     """
     Calculates the RMSE using between arr
     and the estimated values in (U * V^T)
+    usata solo come test finale nella print di riepilogo
     """
     def calcrmse(self, arr):
         nusers = self.nusers
@@ -199,7 +170,7 @@ class SvdMatrix:
     """
     def readinratings(self,arr):
         #arr in realta e train rats
-        with open('resources/train.csv', 'rt') as f:
+        with open('train_split.csv', 'rt') as f:
             reader = csv.reader(f)
             for row in reader:
                 if row[0]!= 'userId':
@@ -211,19 +182,20 @@ class SvdMatrix:
 
     """
     Returns the estimated rating corresponding to userid for movieid
-    DON'T RETURN VALUE BEETWEEEN 1 AND 10 FOR BETTER ORDERING CREDO,SPERO
+    DON'T RETURN VALUE BEETWEEEN 1 AND 10 FOR BETTER ORDERING
+    notice thata uid and mid have to be scaled by one
     """
     def predict_rate(self,uid,mid):
-        p = self.avg + user_bias[uid] + item_bias[mid] + self.dotproduct(self.U[uid], self.V[mid])
+        p = self.avg + user_bias[uid] +item_bias[mid]+ self.dotproduct(self.U[uid], self.V[mid])
         return p
 
-with open('resources/test.csv', 'rt') as f:
+with open('test_split.csv', 'rt') as f:
     reader = csv.reader(f)
     user_test_list = list(reader)
 
 #item bias gia riscalato di -1 per matchare gli indici
 item_bias = {}
-with open('resources/item_bias.csv', 'rt') as f:
+with open('item_bias_test.csv', 'rt') as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != 'ItemId':
@@ -231,9 +203,8 @@ with open('resources/item_bias.csv', 'rt') as f:
 
 #item bias gia riscalato di -1 per matchare gli indici
 user_bias = {}
-with open('resources/user_bias.csv', 'rt') as f:
+with open('user_bias_test.csv', 'rt') as f:
     reader = csv.reader(f)
-    i = 1
     for row in reader:
         if row[0] != 'UserId':
             user_bias[int(row[0])-1] = float(row[1])
@@ -250,7 +221,7 @@ for i in range(0,37142):
 urm = {}
 # urm --> {user:[item]}
 #serve per controllare di non raccomandare film gia visti
-with open('resources/train.csv', 'r') as urm_raw:
+with open('train_split.csv', 'r') as urm_raw:
     reader = csv.reader(urm_raw)
     for row in reader:
         if row[0] != 'userId':
@@ -258,17 +229,17 @@ with open('resources/train.csv', 'r') as urm_raw:
 
 if __name__ == "__main__":
     init = datetime.datetime.now()
-    svd = SvdMatrix(15374, 37142)#inizializza la classe svdMttrix
+    svd = SvdMatrix(15373, 37142)#inizializza la classe svdMttrix
     svd.trainratings()
     print ("rmsetrain: "+ str(svd.calcrmse(svd.trainrats)))
     print ("time: "+ str(datetime.datetime.now()-init))
-    with open('submission/SVD_globalEffect_maxepochs33_minimprov0,0005_regularizer0,02_lrate0,005_r55.csv', 'w', newline='') as f:
+    with open('SVD_globalEffect_maxepochs30_minimprov0,0005_regularizer0,02_lrate0,01_r50_noSumAvg.csv', 'w', newline='') as f:
         my_dict = {}
         rankings = []
         fieldnames = ['userId', 'testItems']
         w = csv.DictWriter(f, fieldnames=fieldnames)
         w.writeheader()
-        for u in range(1,len(user_test_list)):
+        for u in range(1,len(user_test_list),5):
             rankings = []
             for i in range(1,37143):
                 if i not in urm[int(user_test_list[u][0])]:
@@ -276,6 +247,7 @@ if __name__ == "__main__":
                     rankings.append((svd.predict_rate(int(user_test_list[u][0])-1,i-1),i))
             rankings.sort()
             rankings.reverse()
+            print(rankings[0:50])
             rankings_cut = rankings[0:5]
             result = ""
             for i in range(len(rankings_cut)):
