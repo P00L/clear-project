@@ -42,7 +42,7 @@ class SvdMatrix:
     typefile -> 0 if for smaller MovieLens dataset
                 1 if for medium or larger MovieLens dataset
     """
-    def __init__(self, nusers, nmovies, r=55, lrate=0.005, regularizer=0.02):
+    def __init__(self, nusers, nmovies, r=115, lrate=0.11, regularizer=0.025):
         self.trainrats = []#la nostra urm sotto forma di lista di oggetti Rating
         self.testrats = []
                 
@@ -64,8 +64,8 @@ class SvdMatrix:
         self.r = r #le nostre k feature
         self.lrate = lrate
         self.regularizer = regularizer
-        self.minimprov = 0.0005
-        self.maxepochs = 33
+        self.minimprov = 0.0008
+        self.maxepochs = 10
 
 
     """
@@ -122,7 +122,7 @@ class SvdMatrix:
             #spero sia giusto vedi SVD libro di recco consiglaito da cremo(se non cel'hai te lo passo)
             #non sono sicuro sulle norme dei bias in teoria la norma e la somma degli elementi al quadrato sotto radice, ma siccome da noi
             #vuola la norma al quadrato ho lasciato solo la somma degli elementi (forse manca al quadrato)
-            sse += err**2 + self.regularizer * (user_bias[crating.uid]**2 + item_bias[crating.mid]**2 + sum(self.U[crating.uid]) +sum(self.V[crating.mid]))
+            sse += err**2 + self.regularizer * (user_bias[crating.uid]**2 + item_bias[crating.mid]**2 + sum(i*i for i in self.U[crating.uid]) +sum(i*i for i in self.V[crating.mid]))
             n += 1
 
             #store temporary old value
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     svd.trainratings()
     print ("rmsetrain: "+ str(svd.calcrmse(svd.trainrats)))
     print ("time: "+ str(datetime.datetime.now()-init))
-    with open('submission/SVD_globalEffect_maxepochs33_minimprov0,0005_regularizer0,02_lrate0,005_r55.csv', 'w', newline='') as f:
+    with open('submission/SVD_globalEffect_maxepochs10_minimprov0,0008_regularizer0,03_lrate0,2_r115.csv', 'w', newline='') as f:
         my_dict = {}
         rankings = []
         fieldnames = ['userId', 'testItems']
