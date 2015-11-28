@@ -3,7 +3,7 @@ import datetime
 from similarity import item_sim
 
 
-def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
+def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10, w_cbf=0.5, w_knn=0.5):
     """
     * WARNING:
         # This function is very resources and time consuming if it is done in large batch (e.g in a for loop over
@@ -61,25 +61,32 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
                     sim_sums_knn[other_movie] += knn[movie][other_movie]
 
     rankings = {}
-    sim_sums = {}
+    scores_cbf = {}
+    scores_knn = {}
+
     for movie in totals_cbf:
-        rankings.setdefault(movie, totals_cbf[movie])
-        sim_sums.setdefault(movie, sim_sums_cbf[movie])
-        if movie in totals_knn:
-            rankings[movie] += totals_knn[movie]
-            sim_sums[movie] += sim_sums_knn[movie]
+        scores_cbf[movie] = totals_cbf[movie]/sim_sums_cbf[movie]
     for movie in totals_knn:
+        scores_knn[movie] = totals_knn[movie]/sim_sums_knn[movie]
+
+    for movie in scores_cbf:
+        rankings[movie] = scores_cbf[movie]*w_cbf
+        if movie in scores_knn:
+            rankings[movie] += scores_knn[movie]*w_knn
+
+    for movie in scores_knn:
         if movie not in rankings:
-            rankings.setdefault(movie, totals_knn[movie])
-            sim_sums.setdefault(movie, sim_sums_knn[movie])
+            rankings[movie] = scores_knn[movie]*w_knn
 
     # this one are non normalized rankings
-    rankings_final = [(total, item) for item, total in rankings.items()]
+    """
+    rankings = [(total, item) for item, total in rankings.items()]"""
     """
     if you wanna normalized rankings
-    rankings_final = [(round(total/(sim_sums[item]), 3), item) for item, total in rankings.items()]
+    rankings = [(round(total/(sim_sums[item]), 3), item) for item, total in rankings.items()]
     """
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
+    rankings_final = [(total, item) for item, total in rankings.items()]
     sort_rankings = sorted(rankings_final, key=lambda x: -x[0])[0:5]
     # This should happen when there are less than five similar movie for the movies
     if len(sort_rankings) < 5:
@@ -155,7 +162,7 @@ if possible, to traceback the submission, rename the file in this way
 =======================================================================
 """
 time = datetime.datetime.now()
-with open('submission/cbf_knn_hybrid_merge.csv', 'w', newline='') as f:
+with open('submission/cbf_knn_hybrid_merge_w0.5knn_w0.5cbf.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
