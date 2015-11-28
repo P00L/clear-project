@@ -26,6 +26,7 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
     icm_m: item content matrix
     sim_skr: shrink term f the similarity
     shrink: shrink of the function itself
+    knn: it is a
 
     Returns
     -------
@@ -55,7 +56,7 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
             for other_movie in knn[movie]:
                 if other_movie not in user_ratings:
                     totals_knn.setdefault(other_movie, 0.0)
-                    totals_knn[other_movie] += user_ratings*knn[movie][other_movie]
+                    totals_knn[other_movie] += user_ratings[movie]*knn[movie][other_movie]
                     sim_sums_knn.setdefault(other_movie, 0.0)
                     sim_sums_knn[other_movie] += knn[movie][other_movie]
 
@@ -71,7 +72,13 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
         if movie not in rankings:
             rankings.setdefault(movie, totals_knn[movie])
             sim_sums.setdefault(movie, sim_sums_knn[movie])
+
+    # this one are non normalized rankings
+    rankings_final = [(total, item) for item, total in rankings.items()]
+    """
+    if you wanna normalized rankings
     rankings_final = [(round(total/(sim_sums[item]), 3), item) for item, total in rankings.items()]
+    """
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     sort_rankings = sorted(rankings_final, key=lambda x: -x[0])[0:5]
     # This should happen when there are less than five similar movie for the movies
