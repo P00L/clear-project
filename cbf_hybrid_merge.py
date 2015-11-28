@@ -45,18 +45,18 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
                     # per ogni movie non recensito dall'user calcolo la similarity con quelli recensiti
                     similarity = item_sim(icm_m, movie, other_movie, skr=sim_skr)
                 if similarity != 0:
-                    totals_cbf.setdefault(other_movie, 0)
+                    totals_cbf.setdefault(other_movie, 0.0)
                     totals_cbf[other_movie] += user_ratings[movie]*similarity
-                    sim_sums_cbf.setdefault(other_movie, 0)
+                    sim_sums_cbf.setdefault(other_movie, 0.0)
                     sim_sums_cbf[other_movie] += similarity
 
     for movie in user_ratings:
         if movie in knn:
             for other_movie in knn[movie]:
                 if other_movie not in user_ratings:
-                    totals_knn.setdefault(other_movie, 0)
+                    totals_knn.setdefault(other_movie, 0.0)
                     totals_knn[other_movie] += user_ratings*knn[movie][other_movie]
-                    sim_sums_knn.setdefault(other_movie, 0)
+                    sim_sums_knn.setdefault(other_movie, 0.0)
                     sim_sums_knn[other_movie] += knn[movie][other_movie]
 
     rankings = {}
@@ -71,7 +71,7 @@ def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10):
         if movie not in rankings:
             rankings.setdefault(movie, totals_knn[movie])
             sim_sums.setdefault(movie, sim_sums_knn[movie])
-    rankings_final = [(round(total/(sim_sums[item]),3), item) for item, total in rankings.items()]
+    rankings_final = [(round(total/(sim_sums[item]), 3), item) for item, total in rankings.items()]
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     sort_rankings = sorted(rankings_final, key=lambda x: -x[0])[0:5]
     # This should happen when there are less than five similar movie for the movies
