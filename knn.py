@@ -68,7 +68,7 @@ with open('resources/test.csv') as test_raw:
     # create a nested dict for test user
     for row in reader:
         if row[0] != 'userId':
-            test[int(row[0])] = top_n_match(urm, int(row[0]), 10, similarity=cosine_sim)
+            test[int(row[0])] = top_n_match(urm, int(row[0]), skr=10, similarity=cosine_sim)
             print('fatto user: ' + row[0])
 print(datetime.datetime.now() - time)
 print(len(test))
