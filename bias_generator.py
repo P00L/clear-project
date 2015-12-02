@@ -11,7 +11,8 @@ global effect = avg + bi + bu -----> per user u item i
 vedi libro cremo (se non cel'hai te lo passo)
 """
 #shrink
-s=3
+item_shrink = 3
+user_shrink = 3
 
 rating = [] #lista di tutti i rating presenti
 urm_i ={}#{item:[lista di rating]}
@@ -33,7 +34,7 @@ avg = sum_r/n
 print("avg = " + str(avg))
 
 bi= {}
-with open('resources/item_bias.csv', 'w', newline='') as f:
+with open('resources/item_bias_skr10.csv', 'w', newline='') as f:
         my_dict = {}
         fieldnames = ['ItemId', 'bias']
         w = csv.DictWriter(f, fieldnames=fieldnames)
@@ -45,12 +46,12 @@ with open('resources/item_bias.csv', 'w', newline='') as f:
                 sum_r += r - avg
                 n += 1
             my_dict['ItemId'] = i
-            bi[i] = sum_r/n+s
-            my_dict['bias'] = sum_r/n+s
+            bi[i] = sum_r/n+item_shrink
+            my_dict['bias'] = sum_r/n+item_shrink
             w.writerow(my_dict)
 print("item bias "+str(bi))
 
-with open('resources/user_bias.csv', 'w', newline='') as f:
+with open('resources/user_bias_skr5.csv', 'w', newline='') as f:
         my_dict = {}
         fieldnames = ['UserId', 'bias']
         w = csv.DictWriter(f, fieldnames=fieldnames)
@@ -62,7 +63,7 @@ with open('resources/user_bias.csv', 'w', newline='') as f:
                 sum_r += urm_u[u][i] - avg -bi[i]
                 n += 1
             my_dict['UserId'] = u
-            my_dict['bias'] = sum_r/n+s
+            my_dict['bias'] = sum_r/n+user_shrink
             w.writerow(my_dict)
 
 

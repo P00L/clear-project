@@ -3,7 +3,7 @@ import datetime
 from similarity import item_sim
 
 
-def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10, w_cbf=0.9, w_knn=0.1):
+def cbf_recommendations(user_ratings,user, icm_m, knn, sim_skr=20, shrink=10, w_cbf=0.2, w_knn=0.8):
     """
     * WARNING:
         # This function is very resources and time consuming if it is done in large batch (e.g in a for loop over
@@ -163,7 +163,7 @@ if possible, to traceback the submission, rename the file in this way
 =======================================================================
 """
 time = datetime.datetime.now()
-with open('submission/cbf_knn_hybrid_merge_w0knn_w0cbf.csv', 'w', newline='') as f:
+with open('submission/cbf_knn_hybrid_merge_w0.8knn_w0.2cbf.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)

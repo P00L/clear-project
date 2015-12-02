@@ -125,7 +125,6 @@ def getRecommendations(prefs,person, skr):
                     # Similarity * Score
                     totals.setdefault(item,0)
                     totals[item]+=prefs[other][item]*sim
-                    # Sum of similarities
                     simSums.setdefault(item,0)
                     simSums[item] += sim
         # Create the normalized list

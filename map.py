@@ -57,8 +57,9 @@ def mapk(actual, predicted, k):
     """
     return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
 
+#open predicted item
 #{user:[item]}
-with open('test/item_base_filtering_skr6_test_map.csv', 'r') as urm:
+with open('test/SVD/SVD_globalEffect_maxepochs10_minimprov0,0005_regularizer0,02_lrate0,1_r100.csv', 'r') as urm:
     reader = csv.reader(urm)
     predicted_dic = {}
     for row in reader:
@@ -69,7 +70,7 @@ with open('test/item_base_filtering_skr6_test_map.csv', 'r') as urm:
                 lista_int.append(int(i))
             predicted_dic[int(row[0])]= lista_int
 
-
+#open test item
 #{user:[item]}
 with open('test/test_split.csv', 'r') as urm:
     reader = csv.reader(urm)
