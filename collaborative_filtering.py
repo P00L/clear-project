@@ -1,138 +1,52 @@
 import csv
 from math import sqrt
 
-#{user:{item:rating}}  gli indici e i value sono user= int item 0 int rating = float
-with open('resources/train.csv', 'rt') as f:
-    reader = csv.reader(f)
-    urm = {}
-    for row in reader:
-        if row[0]!= 'userId':
-                urm.setdefault(int(row[0]),{})[int(row[1])]=float(row[2])
-
-#funzione che restituisce la similarita tra due user
-def similarity_distance(urm,user_1,user_2):
-    # Get the list of shared_items
-    si={}
-    for item in urm[user_1]:
-        if item in urm[user_2]:
-            si[item]=1
-    # if they have no ratings in common, return 0
-    if len(si)==0: return 0
-    # Add up the squares of all the differences
-    sum_of_squares=sum([pow(urm[user_1][item]-urm[user_2][item],2)
-        for item in urm[user_1] if item in urm[user_2]])
-    return 1/(1+sum_of_squares)
-
-
-# funzione che restituisce la similarity tra due user con paerson
-def similarity_pearson(urm, user_1, user_2, skr):
-    # Get the list of mutually rated items
-    si={}
-    for item in urm[user_1]:
-        if item in urm[user_2]: si[item]=1
-
-    # Find the number of elements
-    n=len(si)
-    # if they are no ratings in common, return 0
-    if n==0: return 0
-    # Add up all the preferences
-    sum1=sum([urm[user_1][it] for it in si])
-    sum2=sum([urm[user_2][it] for it in si])
-    # Sum up the squares
-    sum1Sq=sum([pow(urm[user_1][it],2) for it in si])
-    sum2Sq=sum([pow(urm[user_2][it],2) for it in si])
-    # Sum up the products
-    pSum=sum([urm[user_1][it]*urm[user_2][it] for it in si])
-    # Calculate Pearson score
-    num=pSum-(sum1*sum2/n)
-    den=(sqrt((sum1Sq-pow(sum1,2)/n)*(sum2Sq-pow(sum2,2)/n))+skr)
-    if den==0: return 0
-
-    r=num/den
-
-    return r
-
-
 def squared_root(x):
-    return round(sqrt((sum([x[val] * x[val] for val in x]))), 3)
+    """
+    This function return the sum of the squared roots of the value
 
-#shared e un dizionario di itme in comune {item:rating}
-def similarity_cosine(urm, user1, user2, skr):
+    :param x: dict of values
+    :return: a float that is the sum of the squared roots
+    """
+    return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
+
+def adj_cosine_sim(urm, user1, user2, skr=0):
+    #somma prodotto voti in comune / sqrt(voti al quadrato user1) * sqrt(voti al quadrato user1)
     shared_1 = {}
     shared_2 = {}
     for val in urm[user1]:
         if val in urm[user2]:
             shared_1[val] = urm[user1][val]
             shared_2[val] = urm[user2][val]
-    #se non hanno niente in comune
     if len(shared_1) == 0:
         return 0
-    num = sum([shared_1[val]*shared_2[val] for val in shared_1])
-    den = (squared_root(urm[user1])*squared_root(urm[user2])+skr)
-    return round(num/den, 3)
+    num = sum([(shared_1[val] - item_avg[val]) * (shared_2[val] - item_avg[val]) for val in shared_1])
+    den = squared_root(urm[user1])*squared_root(urm[user2])
+    return round(num/(den + skr), 3)
 
-
-# Returns the best matches for person from the prefs dictionary.
-# Number of results and similarity function are optional params.
-def topMatches(prefs,person):
-    scores=[(similarity_distance(prefs,person,other),other)
-                for other in prefs if other!=person]
-    # Sort the list so the highest scores appear at the top
-    scores.sort( )
-    scores.reverse( )
-    return scores[0:5]
 
 # Gets recommendations for a person by using a weighted average
 # of every other user's rankings
-def getRecommendations(prefs,person, skr):
+def getRecommendations(urm,person, skr):
 
     totals={}
-    simSums={}
-    for other in prefs:
+    for other in urm:
         # don't compare me to myself
         if other==person: continue
-        sim=similarity_pearson(prefs,person,other, skr)
+        sim=adj_cosine_sim(urm,person,other, skr)
         # ignore scores of zero or lower
         if sim<=0: continue
-        for item in prefs[other]:
+        for item in urm[other]:
             #only score movies I haven't seen yet
-            if item not in prefs[person] or prefs[person][item]==0:
+            if item not in urm[person] or urm[person][item]==0:
                 # Similarity * Score
                 totals.setdefault(item,0)
-                totals[item]+=prefs[other][item]*sim
-                # Sum of similarities
-                simSums.setdefault(item,0)
-                simSums[item]+=sim
+                totals[item]+=urm[other][item]*sim
     # Create the normalized list
-    rankings=[(total/(simSums[item]+ skr),item) for item,total in totals.items( )]
+    rankings=[(total,item) for item,total in totals.items( )]
     # Return the sorted list
     rankings.sort()
     rankings.reverse()
-
-    #Chiama cosine se le pearson fa schifo
-    if len(rankings) == 0:
-        totals={}
-        simSums={}
-        for other in prefs:
-            # don't compare me to myself
-            if other==person: continue
-            sim=similarity_cosine(prefs,person,other, skr)
-            # ignore scores of zero or lower
-            if sim<=0: continue
-            for item in prefs[other]:
-                #only score movies I haven't seen yet
-                if item not in prefs[person] or prefs[person][item]==0:
-                    # Similarity * Score
-                    totals.setdefault(item,0)
-                    totals[item]+=prefs[other][item]*sim
-                    simSums.setdefault(item,0)
-                    simSums[item] += sim
-        # Create the normalized list
-        rankings=[(total/(simSums[item]+skr),item) for item,total in totals.items( )]
-        # Return the sorted list
-        rankings.sort()
-        rankings.reverse()
-
 
     rankings_cut = []
     if len(rankings)> 5:
@@ -146,6 +60,64 @@ def getRecommendations(prefs,person, skr):
 
     return result
 
+item_bias = {}
+user_bias = {}
+urm = {}
+user_avg = {}
+item_avg = {}
+
+with open('resources/item_bias.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'ItemId':
+            item_bias[int(row[0])] = float(row[1])
+
+with open('resources/user_bias.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'UserId':
+            user_bias[int(row[0])] = float(row[1])
+
+#riempio user_bias e item_bias per fillare i valori mancanti
+for i in range(1,15374):
+    if i not in user_bias:
+        user_bias[i] = float(0)
+
+for i in range(1,37143):
+    if i not in item_bias:
+        item_bias[i] = float(0)
+
+with open('resources/item_avg.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'ItemId':
+            item_avg[int(row[0])] = float(row[1])
+
+with open('resources/user_avg.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'UserId':
+            user_avg[int(row[0])] = float(row[1])
+
+#riempio user_bias e item_bias per fillare i valori mancanti
+for i in range(1,15374):
+    if i not in user_avg:
+        user_avg[i] = float(0)
+
+for i in range(1,37143):
+    if i not in item_avg:
+        item_avg[i] = float(0)
+
+
+#{user:{item:rating}}  gli indici e i value sono user= int item 0 int rating = float
+with open('resources/train.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0]!= 'userId':
+                urm.setdefault(int(row[0]),{})[int(row[1])]=round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
+
+
+
 with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     test_dict = {}
@@ -157,7 +129,7 @@ with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     list = list(reader)
 
-with open('submission/consegna_cb_pearson.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f,fieldnames=fieldnames)
