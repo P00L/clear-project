@@ -2,16 +2,10 @@ import csv
 from math import sqrt
 
 def squared_root(x):
-    """
-    This function return the sum of the squared roots of the value
-
-    :param x: dict of values
-    :return: a float that is the sum of the squared roots
-    """
     return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
 
-def adj_cosine_sim(urm, user1, user2, skr=0):
-    #somma prodotto voti in comune / sqrt(voti al quadrato user1) * sqrt(voti al quadrato user1)
+#FORSE NON E ADJUSTED COSINE MA PEARSON
+def adj_cosine_sim(urm, user1, user2, skr=0.0):
     shared_1 = {}
     shared_2 = {}
     for val in urm[user1]:
@@ -41,7 +35,7 @@ def getRecommendations(urm,person, skr):
             if item not in urm[person] or urm[person][item]==0:
                 # Similarity * Score
                 totals.setdefault(item,0)
-                totals[item]+=urm[other][item]*sim
+                totals[item]+=urm[other][item] * sim
     # Create the normalized list
     rankings=[(total,item) for item,total in totals.items( )]
     # Return the sorted list
@@ -63,7 +57,6 @@ def getRecommendations(urm,person, skr):
 item_bias = {}
 user_bias = {}
 urm = {}
-user_avg = {}
 item_avg = {}
 
 with open('resources/item_bias.csv', 'rt') as f:
@@ -93,17 +86,6 @@ with open('resources/item_avg.csv', 'rt') as f:
         if row[0] != 'ItemId':
             item_avg[int(row[0])] = float(row[1])
 
-with open('resources/user_avg.csv', 'rt') as f:
-    reader = csv.reader(f)
-    for row in reader:
-        if row[0] != 'UserId':
-            user_avg[int(row[0])] = float(row[1])
-
-#riempio user_bias e item_bias per fillare i valori mancanti
-for i in range(1,15374):
-    if i not in user_avg:
-        user_avg[i] = float(0)
-
 for i in range(1,37143):
     if i not in item_avg:
         item_avg[i] = float(0)
@@ -117,7 +99,6 @@ with open('resources/train.csv', 'rt') as f:
                 urm.setdefault(int(row[0]),{})[int(row[1])]=round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
 
 
-
 with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     test_dict = {}
@@ -129,7 +110,7 @@ with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     list = list(reader)
 
-with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f,fieldnames=fieldnames)

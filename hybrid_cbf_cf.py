@@ -1,9 +1,28 @@
 import csv
 import datetime
 from similarity import item_sim,cosine_sim
+from math import sqrt
+
+#FORSE NON E ADJUSTED COSINE MA PEARSON
+def adj_cosine_sim(urm, user1, user2, skr=0.0):
+    shared_1 = {}
+    shared_2 = {}
+    for val in urm[user1]:
+        if val in urm[user2]:
+            shared_1[val] = urm[user1][val]
+            shared_2[val] = urm[user2][val]
+    if len(shared_1) == 0:
+        return 0
+    num = sum([(shared_1[val] - item_avg[val]) * (shared_2[val] - item_avg[val]) for val in shared_1])
+    den = squared_root(urm[user1])*squared_root(urm[user2])
+    return round(num/(den + skr), 3)
+
+def squared_root(x):
+    return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
 
 
-def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.91, w_cf=0.09):
+
+def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.9, w_cf=0.1):
     totals_cbf = {}  # dizionario {item: sum (rating * similarity)}
     sim_sums_cbf = {}  # dizionario {item: sum (similarity)}
     totals_cf={}
@@ -28,7 +47,7 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
     for other in urm:
         # don't compare me to myself
         if other==user: continue
-        similarity_urm = cosine_sim(urm,user,other,6)
+        similarity_urm = adj_cosine_sim(urm,user,other,6)
         # ignore scores of zero or lower
         if similarity_urm<=0: continue
         for item in urm[other]:
@@ -68,6 +87,7 @@ icm = {} #{item:{feature:1}
 urm = {} #{user:{item:rating}
 item_bias = {}
 user_bias = {}
+item_avg = {}
 
 with open('resources/icm.csv', 'r') as icm_raw:
     reader = csv.reader(icm_raw)
@@ -106,16 +126,25 @@ with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     user_test_list = list(reader)
 
+with open('resources/item_avg.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'ItemId':
+            item_avg[int(row[0])] = float(row[1])
+
+for i in range(1,37143):
+    if i not in item_avg:
+        item_avg[i] = float(0)
 
 
 #qui si fa tutto
 time = datetime.datetime.now()
-with open('submission/hybrid_cbf_cf_w0.09cf_w0.91cbf.csv', 'w', newline='') as f:
+with open('resources/hybrid_cbf_cfAdjCosine_w0.1cf_w0.9cbf.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
-    for i in range(1, len(user_test_list)):
+    for i in range(1, len(user_test_list),5):
         my_dict['userId'] = user_test_list[i][0]
         my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])], int(user_test_list[i][0]), icm, shrink=10, sim_skr=20)
         w.writerow(my_dict)
