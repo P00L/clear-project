@@ -22,7 +22,7 @@ def squared_root(x):
 
 
 
-def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.9, w_cf=0.1):
+def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.87, w_cf=0.13):
     totals_cbf = {}  # dizionario {item: sum (rating * similarity)}
     sim_sums_cbf = {}  # dizionario {item: sum (similarity)}
     totals_cf={}
@@ -69,6 +69,11 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
     for movie in totals_cf:
         if movie not in rankings:
             rankings[movie] = totals_cf[movie]*w_cf
+
+    #togliamo da ranking i movie troppo popolari
+    for i in range(0,1000):
+        if sort_popularity[i][0]in rankings:
+            del rankings[sort_popularity[i][0]]
 
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     rankings_final = [(total, item) for item, total in rankings.items()]
@@ -136,15 +141,29 @@ for i in range(1,37143):
     if i not in item_avg:
         item_avg[i] = float(0)
 
+#movie {item:numero voti}
+with open('resources/train.csv', 'rt') as f:
+    reader = csv.reader(f)
+    movie = {}
+    for row in reader:
+        if row[0] != 'userId':
+            movie.setdefault(int(row[1]), []).append(row[2])
+
+popularity = []
+for key in movie:
+    popularity.append((key,len(movie[key])))
+
+sort_popularity = sorted(popularity, key=lambda x: -x[1])
+print(sort_popularity[0:1000])
 
 #qui si fa tutto
 time = datetime.datetime.now()
-with open('resources/hybrid_cbf_cfAdjCosine_w0.1cf_w0.9cbf.csv', 'w', newline='') as f:
+with open('submission/hybrid_cbf_cfAdjCosine_w0.13cf_w0.87cbf_popularity1000.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
-    for i in range(1, len(user_test_list),5):
+    for i in range(1, len(user_test_list)):
         my_dict['userId'] = user_test_list[i][0]
         my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])], int(user_test_list[i][0]), icm, shrink=10, sim_skr=20)
         w.writerow(my_dict)

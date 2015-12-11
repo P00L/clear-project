@@ -36,6 +36,12 @@ def getRecommendations(urm,person, skr):
                 # Similarity * Score
                 totals.setdefault(item,0)
                 totals[item]+=urm[other][item] * sim
+
+    #togliamo da totals i film troppo popolari
+    for i in range(0,1500):
+        if sort_popularity[i][0]in totals:
+            del totals[sort_popularity[i][0]]
+
     # Create the normalized list
     rankings=[(total,item) for item,total in totals.items( )]
     # Return the sorted list
@@ -58,6 +64,7 @@ item_bias = {}
 user_bias = {}
 urm = {}
 item_avg = {}
+movie = {}  #movie {item:numero voti} serve per la popularity
 
 with open('resources/item_bias.csv', 'rt') as f:
     reader = csv.reader(f)
@@ -110,7 +117,21 @@ with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
     list = list(reader)
 
-with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+
+with open('resources/train.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'userId':
+            movie.setdefault(int(row[1]), []).append(row[2])
+
+popularity = []
+for key in movie:
+    popularity.append((key,len(movie[key])))
+
+sort_popularity = sorted(popularity, key=lambda x: -x[1])
+print(sort_popularity[0:1000])
+
+with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity1500.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f,fieldnames=fieldnames)
