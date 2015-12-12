@@ -59,7 +59,7 @@ def mapk(actual, predicted, k):
 
 #open predicted item
 #{user:[item]}
-with open('test/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity_test.csv', 'r') as urm:
+with open('test/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity1000_test.csv', 'r') as urm:
     reader = csv.reader(urm)
     predicted_dic = {}
     for row in reader:

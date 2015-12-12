@@ -40,8 +40,8 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
                 if similarity != 0:
                     totals_cbf.setdefault(other_movie, 0.0)
                     totals_cbf[other_movie] += user_ratings[movie]*similarity
-                    sim_sums_cbf.setdefault(other_movie, 0.0)
-                    sim_sums_cbf[other_movie] += similarity
+                   # sim_sums_cbf.setdefault(other_movie, 0.0)
+                    #sim_sums_cbf[other_movie] += similarity
 
     #generiamo il ranking di cf
     for other in urm:
@@ -57,8 +57,8 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
                 totals_cf.setdefault(item,0)
                 totals_cf[item]+=urm[other][item]*similarity_urm
                 # Sum of similarities
-                simSums_cf.setdefault(item,0)
-                simSums_cf[item]+=similarity_urm
+               # simSums_cf.setdefault(item,0)
+               # simSums_cf[item]+=similarity_urm
 
     #mergiamo i ranking di cbf e cf pesando i valori
     for movie in totals_cbf:
@@ -71,7 +71,7 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
             rankings[movie] = totals_cf[movie]*w_cf
 
     #togliamo da ranking i movie troppo popolari
-    for i in range(0,1000):
+    for i in range(0,500):
         if sort_popularity[i][0]in rankings:
             del rankings[sort_popularity[i][0]]
 
@@ -90,6 +90,7 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
 
 icm = {} #{item:{feature:1}
 urm = {} #{user:{item:rating}
+movie = {}#movie {item:[lista di voti]}
 item_bias = {}
 user_bias = {}
 item_avg = {}
@@ -126,6 +127,7 @@ with open('resources/train.csv', 'r') as urm_raw:
     for row in reader:
         if row[0] != 'userId':
             urm.setdefault(int(row[0]), {})[int(row[1])] = round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
+            movie.setdefault(int(row[1]), []).append(row[2])
 
 with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
@@ -141,14 +143,6 @@ for i in range(1,37143):
     if i not in item_avg:
         item_avg[i] = float(0)
 
-#movie {item:numero voti}
-with open('resources/train.csv', 'rt') as f:
-    reader = csv.reader(f)
-    movie = {}
-    for row in reader:
-        if row[0] != 'userId':
-            movie.setdefault(int(row[1]), []).append(row[2])
-
 popularity = []
 for key in movie:
     popularity.append((key,len(movie[key])))
@@ -158,7 +152,7 @@ print(sort_popularity[0:1000])
 
 #qui si fa tutto
 time = datetime.datetime.now()
-with open('submission/hybrid_cbf_cfAdjCosine_w0.13cf_w0.87cbf_popularity1000.csv', 'w', newline='') as f:
+with open('submission/hybrid_cbf_cf_w0.13cf_w0.87cbf_popularity500.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
