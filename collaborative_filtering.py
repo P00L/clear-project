@@ -4,7 +4,7 @@ from math import sqrt
 def squared_root(x):
     return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
 
-#FORSE NON E ADJUSTED COSINE MA PEARSON
+#Adjusted Cosine used
 def adj_cosine_sim(urm, user1, user2, skr=0.0):
     shared_1 = {}
     shared_2 = {}
@@ -23,36 +23,36 @@ def adj_cosine_sim(urm, user1, user2, skr=0.0):
 # of every other user's rankings
 def getRecommendations(urm,person, skr):
 
-    totals={}
+    totals = {}
     for other in urm:
         # don't compare me to myself
-        if other==person: continue
-        sim=adj_cosine_sim(urm,person,other, skr)
+        if other == person : continue
+        sim = adj_cosine_sim(urm, person, other, skr)
         # ignore scores of zero or lower
-        if sim<=0: continue
+        if sim <= 0 : continue
         for item in urm[other]:
             #only score movies I haven't seen yet
-            if item not in urm[person] or urm[person][item]==0:
+            if item not in urm[person] or urm[person][item] == 0:
                 # Similarity * Score
-                totals.setdefault(item,0)
-                totals[item]+=urm[other][item] * sim
+                totals.setdefault(item, 0)
+                totals[item] += urm[other][item] * sim
 
     #togliamo da totals i film troppo popolari
-    for i in range(0,1500):
+    for i in range(0, 1500):
         if sort_popularity[i][0]in totals:
             del totals[sort_popularity[i][0]]
 
     # Create the normalized list
-    rankings=[(total,item) for item,total in totals.items( )]
+    rankings=[(total, item) for item, total in totals.items()]
     # Return the sorted list
     rankings.sort()
     rankings.reverse()
 
     rankings_cut = []
-    if len(rankings)> 5:
+    if len(rankings) > 5:
         rankings_cut = rankings[0:5]
     result = ""
-    avg_rating = ['33173' , '33475', '1076','15743','35300']
+    avg_rating = ['33173', '33475', '1076', '15743', '35300']
     for i in range(len(rankings_cut)):
         result = result + " " + str(rankings_cut[i][1])
     for i in range(5 - len(rankings_cut)):
@@ -102,8 +102,8 @@ for i in range(1,37143):
 with open('resources/train.csv', 'rt') as f:
     reader = csv.reader(f)
     for row in reader:
-        if row[0]!= 'userId':
-                urm.setdefault(int(row[0]),{})[int(row[1])]=round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
+        if row[0] != 'userId':
+                urm.setdefault(int(row[0]), {})[int(row[1])] = round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
 
 
 with open('resources/test.csv', 'rt') as f:
@@ -126,15 +126,15 @@ with open('resources/train.csv', 'rt') as f:
 
 popularity = []
 for key in movie:
-    popularity.append((key,len(movie[key])))
+    popularity.append((key, len(movie[key])))
 
 sort_popularity = sorted(popularity, key=lambda x: -x[1])
 print(sort_popularity[0:1000])
 
-with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity1500.csv', 'w',newline='') as f:  # Just use 'w' mode in 3.x
+with open('submission/cf_AdjCosine_skr6cosine_bias_noDenRanking_popularity1500.csv', 'w', newline='') as f:  # Just use 'w' mode in 3.x
     my_dict = {}
     fieldnames = ['userId', 'testItems']
-    w = csv.DictWriter(f,fieldnames=fieldnames)
+    w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
     for i in range(1, len(list)):
         my_dict['userId'] = list[i][0]

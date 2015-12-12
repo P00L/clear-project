@@ -44,9 +44,15 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10):
                     similarity = item_sim(icm_m, movie, other_movie, skr=sim_skr)
                 if similarity != 0:
                     totals.setdefault(other_movie, 0)
-                    totals[other_movie] += user_ratings[movie]*similarity + user_bias[user] + item_bias[movie]
+                    totals[other_movie] += user_ratings[movie]*similarity
                     sim_sums.setdefault(other_movie, 0)
                     sim_sums[other_movie] += similarity
+
+    #togliamo da totals i film troppo popolari
+    for i in range(0, 1000):
+        if sort_popularity[i][0]in totals:
+            del totals[sort_popularity[i][0]]
+
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     rankings = [(total/(sim_sums[item] + shrink), item) for item, total in totals.items()]
     sort_rankings = sorted(rankings, key=lambda x: -x[0])[0:5]
@@ -63,6 +69,7 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10):
 icm = {}
 urm = {}
 dict_similarity = {}  # dizionario delle similarity del tipo {'(movie, other)' : 'sim'}
+movie = {}  #movie {item:numero voti'} la popularity
 # icm --> {item:{feature:1}
 with open('resources/icm.csv', 'r') as icm_raw:
 
@@ -104,6 +111,19 @@ with open('resources/train.csv', 'r') as urm_raw:
         if row[0] != 'userId':
             urm.setdefault(int(row[0]), {})[int(row[1])] = round(float(row[2])+user_bias[int(row[0])]+item_bias[int(row[1])], 5)
 
+#creaiamo il dizionario della popularity
+with open('resources/train.csv', 'rt') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0] != 'userId':
+            movie.setdefault(int(row[1]), []).append(row[2])
+
+popularity = []
+for key in movie:
+    popularity.append((key, len(movie[key])))
+
+sort_popularity = sorted(popularity, key=lambda x: -x[1])
+print(sort_popularity[0:1000])
 
 with open('resources/test.csv', 'rt') as f:
     reader = csv.reader(f)
@@ -116,12 +136,12 @@ if possible, to traceback the submission, rename the file in this way
 =======================================================================
 """
 time = datetime.datetime.now()
-with open('submission/cbf_srk20sim_skr10rank_biasDoppio.csv', 'w', newline='') as f:
+with open('submission/cbf_srk20sim_skr10rank_popularity1000SECONDAParte.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)
     w.writeheader()
-    for i in range(1, len(user_test_list)):
+    for i in range(3516, len(user_test_list)):
         my_dict['userId'] = user_test_list[i][0]
         my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])],int(user_test_list[i][0]), icm, shrink=10, sim_skr=20)
         w.writerow(my_dict)

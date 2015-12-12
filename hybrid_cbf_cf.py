@@ -1,6 +1,6 @@
 import csv
 import datetime
-from similarity import item_sim,cosine_sim
+from similarity import item_sim, cosine_sim
 from math import sqrt
 
 #FORSE NON E ADJUSTED COSINE MA PEARSON
@@ -25,8 +25,8 @@ def squared_root(x):
 def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.87, w_cf=0.13):
     totals_cbf = {}  # dizionario {item: sum (rating * similarity)}
     sim_sums_cbf = {}  # dizionario {item: sum (similarity)}
-    totals_cf={}
-    simSums_cf={}
+    totals_cf = {}
+    simSums_cf = {}
     rankings = {}
     avg_rec = [(5.0, 33173), (5.0, 33475), (5.0, 1076), (5.0, 35300), (5.0, 15743)]
 
@@ -49,13 +49,13 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
         if other==user: continue
         similarity_urm = adj_cosine_sim(urm,user,other,6)
         # ignore scores of zero or lower
-        if similarity_urm<=0: continue
+        if similarity_urm <= 0 : continue
         for item in urm[other]:
             # only score movies I haven't seen yet
             if item not in urm[user] or urm[user][item]==0:
                 # Similarity * Score
                 totals_cf.setdefault(item,0)
-                totals_cf[item]+=urm[other][item]*similarity_urm
+                totals_cf[item] += urm[other][item]*similarity_urm
                 # Sum of similarities
                # simSums_cf.setdefault(item,0)
                # simSums_cf[item]+=similarity_urm
