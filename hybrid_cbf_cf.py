@@ -3,8 +3,22 @@ import datetime
 from similarity import item_sim, cosine_sim
 from math import sqrt
 
-#FORSE NON E ADJUSTED COSINE MA PEARSON
+
 def adj_cosine_sim(urm, user1, user2, skr=0.0):
+    """
+    adjusted cosine ? or  pearson?
+    Parameters
+    ----------
+    urm: urm matrix
+    user1: the first user
+    user2: the user to be compared with
+    skr: the shrink factor
+
+    Returns
+    -------
+    Float that represents similarity between two users
+
+    """
     shared_1 = {}
     shared_2 = {}
     for val in urm[user1]:
@@ -17,20 +31,33 @@ def adj_cosine_sim(urm, user1, user2, skr=0.0):
     den = squared_root(urm[user1])*squared_root(urm[user2])
     return round(num/(den + skr), 3)
 
+
 def squared_root(x):
     return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
 
 
+def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.87, w_cf=0.13):
+    """
+    hybrid recommendations for a user
+    Parameters
+    ----------
+    user_ratings: the rating of the user to be recommended
+    user: the user to be recommenended
+    icm_m: the ICM matrix
+    sim_skr: the shrink sim for CBF
+    w_cbf: the weight for CBF
+    w_cf: the weight for CF
 
-def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0.87, w_cf=0.13):
+    Returns
+    -------
+    List of 5 movies recommended
+    """
     totals_cbf = {}  # dizionario {item: sum (rating * similarity)}
-    sim_sums_cbf = {}  # dizionario {item: sum (similarity)}
     totals_cf = {}
-    simSums_cf = {}
     rankings = {}
     avg_rec = [(5.0, 33173), (5.0, 33475), (5.0, 1076), (5.0, 35300), (5.0, 15743)]
 
-    #generiamo il ranking di cbf
+    # generiamo il ranking di cbf
     for other_movie in icm_m:  # scandisco tutti i movie non recensiti dall'user e li confronto con quelli recensiti
         if other_movie not in user_ratings:
             for movie in user_ratings:
@@ -40,10 +67,8 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
                 if similarity != 0:
                     totals_cbf.setdefault(other_movie, 0.0)
                     totals_cbf[other_movie] += user_ratings[movie]*similarity
-                   # sim_sums_cbf.setdefault(other_movie, 0.0)
-                    #sim_sums_cbf[other_movie] += similarity
 
-    #generiamo il ranking di cf
+    # generiamo il ranking di cf
     for other in urm:
         # don't compare me to myself
         if other==user: continue
@@ -56,11 +81,8 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
                 # Similarity * Score
                 totals_cf.setdefault(item,0)
                 totals_cf[item] += urm[other][item]*similarity_urm
-                # Sum of similarities
-               # simSums_cf.setdefault(item,0)
-               # simSums_cf[item]+=similarity_urm
 
-    #mergiamo i ranking di cbf e cf pesando i valori
+    # mergiamo i ranking di cbf e cf pesando i valori
     for movie in totals_cbf:
         rankings[movie] = totals_cbf[movie]*w_cbf
         if movie in totals_cf:
@@ -70,8 +92,8 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
         if movie not in rankings:
             rankings[movie] = totals_cf[movie]*w_cf
 
-    #togliamo da ranking i movie troppo popolari
-    for i in range(0,500):
+    # togliamo da ranking i movie troppo popolari
+    for i in range(0, 500):
         if sort_popularity[i][0]in rankings:
             del rankings[sort_popularity[i][0]]
 
@@ -88,9 +110,9 @@ def cbf_recommendations(user_ratings,user, icm_m, sim_skr=20, shrink=10, w_cbf=0
         string_s = string_s + " " + str(sort_rankings[rate][1])
     return string_s
 
-icm = {} #{item:{feature:1}
-urm = {} #{user:{item:rating}
-movie = {}#movie {item:[lista di voti]}
+icm = {}  # {item:{feature:1}
+urm = {}  # {user:{item:rating}
+movie = {}  # movie {item:[lista di voti]}
 item_bias = {}
 user_bias = {}
 item_avg = {}
@@ -113,7 +135,7 @@ with open('resources/user_bias.csv', 'rt') as f:
         if row[0] != 'UserId':
             user_bias[int(row[0])] = float(row[1])
 
-#riempio user_bias e item_bias per fillare i valori mancanti
+# riempio user_bias e item_bias per fillare i valori mancanti
 for i in range(1,15374):
     if i not in user_bias:
         user_bias[i] = float(0)
@@ -145,12 +167,12 @@ for i in range(1,37143):
 
 popularity = []
 for key in movie:
-    popularity.append((key,len(movie[key])))
+    popularity.append((key, len(movie[key])))
 
 sort_popularity = sorted(popularity, key=lambda x: -x[1])
 print(sort_popularity[0:1000])
 
-#qui si fa tutto
+# qui si fa tutto
 time = datetime.datetime.now()
 with open('submission/hybrid_cbf_cf_w0.13cf_w0.87cbf_popularity500.csv', 'w', newline='') as f:
     my_dict = {}
@@ -159,7 +181,7 @@ with open('submission/hybrid_cbf_cf_w0.13cf_w0.87cbf_popularity500.csv', 'w', ne
     w.writeheader()
     for i in range(1, len(user_test_list)):
         my_dict['userId'] = user_test_list[i][0]
-        my_dict['testItems'] = cbf_recommendations(urm[int(user_test_list[i][0])], int(user_test_list[i][0]), icm, shrink=10, sim_skr=20)
+        my_dict['testItems'] = hybrid_rec(urm[int(user_test_list[i][0])], int(user_test_list[i][0]), icm, sim_skr=20)
         w.writerow(my_dict)
         print(str(my_dict['userId']) + "," + str(my_dict['testItems']))
 print(datetime.datetime.now() - time)
