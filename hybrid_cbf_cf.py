@@ -93,7 +93,7 @@ def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.87, w_cf=0.13):
             rankings[movie] = totals_cf[movie]*w_cf
 
     # togliamo da ranking i movie troppo popolari
-    for i in range(0, 500):
+    for i in range(0, 600):
         if sort_popularity[i][0]in rankings:
             del rankings[sort_popularity[i][0]]
 
@@ -123,13 +123,13 @@ with open('resources/icm.csv', 'r') as icm_raw:
         if row[0] != 'itemId':
             icm.setdefault(int(row[0]), {}).setdefault(int(row[1]), 1)
 
-with open('resources/item_bias_correct.csv', 'rt') as f:
+with open('resources/item_bias.csv', 'rt') as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != 'ItemId':
             item_bias[int(row[0])] = float(row[1])
 
-with open('resources/user_bias_correct.csv', 'rt') as f:
+with open('resources/user_bias.csv', 'rt') as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != 'UserId':
@@ -174,7 +174,7 @@ print(sort_popularity[0:1000])
 
 # qui si fa tutto
 time = datetime.datetime.now()
-with open('submission/hybrid_cbf_cfAdjCosine_w0.13cf_w0.87cbf_popularity500_biasGiusti.csv', 'w', newline='') as f:
+with open('submission/hybrid_cbf_cfAdjCosine_w0.13cf_w0.87cbf_popularity600.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)

@@ -36,7 +36,7 @@ def squared_root(x):
     return round(sqrt((sum([(x[val] - item_avg[val]) * (x[val] - item_avg[val]) for val in x]))), 3)
 
 
-def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.87, w_cf=0.13):
+def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.82, w_cf=0.18):
     """
     hybrid recommendations for a user
     Parameters
@@ -92,9 +92,10 @@ def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.87, w_cf=0.13):
             rankings[movie] = totals_cf[movie]*w_cf
 
     # togliamo da ranking i movie troppo popolari
+    """
     # se il film meno popolare votato dall'user ha meno di 10 voti metto una soglia nel range dove eliminare
     if user_min_pop[user] < 10:
-        for i in range(0, index_pop[(user_min_pop[user] + 5)]):
+        for i in range(0, 500):
             if sort_popularity[i][0]in rankings:
                 del rankings[sort_popularity[i][0]]
     # altrimenti eliminiamo i film piu' popolari del meno popolare votato dall'utente senza nessuna soglia
@@ -102,12 +103,11 @@ def hybrid_rec(user_ratings, user, icm_m, sim_skr=20, w_cbf=0.87, w_cf=0.13):
         for i in range(0,index_pop[user_min_pop[user]]):
             if sort_popularity[i][0]in rankings:
                 del rankings[sort_popularity[i][0]]
-
     """
     for i in range(0,index_pop[user_min_pop[user]]):
         if sort_popularity[i][0]in rankings:
             del rankings[sort_popularity[i][0]]
-    """
+
     # compute the ranking for every movie, but the due to the shrink term the value are not prediction
     rankings_final = [(total, item) for item, total in rankings.items()]
     sort_rankings = sorted(rankings_final, key=lambda x: -x[0])[0:5]
@@ -194,6 +194,7 @@ for item in movie:
 for i in range(1,37143):
     if i not in movie:
         popularity.append((i , 0))
+        popularity_dict[i] = 0
 # ordiniamo i film per popolarita' max-->min
 sort_popularity = sorted(popularity, key=lambda x: -x[1])
 # riempiamo index_pop con l'occorrenza del primo valore di popolarita'
@@ -218,7 +219,7 @@ for i in range(0,15374):
 
 # qui si fa tutto
 time = datetime.datetime.now()
-with open('submission/hybrid_cbf_cfAdjCosine_w0.13cf_w0.87cbf_mira_soglia5.csv', 'w', newline='') as f:
+with open('submission/hybrid_cbf_cfAdjCosine_w0.18cf_w0.82cbf_mira.csv', 'w', newline='') as f:
     my_dict = {}
     fieldnames = ['userId', 'testItems']
     w = csv.DictWriter(f, fieldnames=fieldnames)

@@ -87,9 +87,11 @@ for user in urm:
 for i in range(0,15374):
     if i not in user_min_pop:
         user_min_pop[i] = 0
-print(sort_popularity)
-print(index_pop[78])
+print(sort_popularity[19144])
+print(index_pop[1])
 for item in urm[10]:
     print("film "+str(item)+" popularity "+str(popularity_dict[item]))
 print("min popo "+str(user_min_pop[10]))
-
+x = [0,1,2,3,4,5,6,7,8,9]
+for i in range(0,5):
+    print(x[i])
